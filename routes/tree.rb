@@ -2,9 +2,10 @@
 
 # Routes for tree nodes of the application
 class TreeViewerApplication
-  path :node, '/node'
+  path :current_node, '/node'
   path :empty_tree, '/empty_tree'
   path :not_found, '/not_found'
+  path :node_parent, '/node/parent'
 
   hash_branch('empty_tree') do |r|
     view('empty_tree')
@@ -26,16 +27,18 @@ class TreeViewerApplication
       next r.redirect(path(not_found_path)) if parent.nil?
 
       opts[:current_node] = parent
-      r.redirect(node_path)
+      r.redirect(current_node_path)
     end
 
     r.on 'child', Integer do |node_id|
       # Child getter overloaded, numeric indexes return ordinal child
-      child = @current_node[node_id.to_s]
+      child = @current_node.children.find {|child| child.name == node_id.to_s}
       next r.redirect(path(not_found_path)) if child.nil?
 
       opts[:current_node] = child
-      r.redirect(node_path)
+      r.redirect(current_node_path)
     end
+
+    r.redirect(not_found_path)
   end
 end

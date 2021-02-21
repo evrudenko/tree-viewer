@@ -1,1 +1,27 @@
-Данные узла
+<div class="grid-x">
+  <div class="cell large-4">
+  <% if @current_node.parent %>
+    <h4>Родительский узел</h4>
+    <a href="<%= path(node_parent_path) %>"><%= @current_node.parent.content[:title] %></a>
+  <% end %>
+  </div>
+
+  <div class="cell large-4">
+    <h4>Текущий узел</h4>
+    <p>Название: <%= @current_node.content[:title] %></p>
+    <% if @current_node.content[:description] %>
+      <p>Описание: <%= @current_node.content[:description] %></p>
+    <% end %>
+  </div>
+
+  <div class="cell large-4">
+  <% if @current_node.children %>
+    <h4>Дочерние узлы</h4>
+    <ul>
+    <% @current_node.children.each do |child| %>
+      <li><a href="/node/child/<%= child.name %>"><%= child.content[:title] %></a></li>
+    <% end %>
+    </ul>
+  <% end %>
+  </div>
+</div>
