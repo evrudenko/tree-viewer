@@ -23,8 +23,7 @@ class TreeViewerApplication < Roda
   require_relative 'routes/tree'
 
   opts[:store] = Store.new
-  # opts[:current_node] = opts[:store].root
-  opts[:current_node] = Tree::TreeNode.new('0', 'a')
+  opts[:current_node] = opts[:store].root
 
   status_handler(404) do
     view('not_found')
