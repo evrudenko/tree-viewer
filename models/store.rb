@@ -12,7 +12,6 @@ class Store
   def initialize
     read_data
     at_exit { save_data }
-    pp 'done'
   end
 
   def read_data
@@ -43,6 +42,34 @@ class Store
   def save_data
     data_json = JSON.pretty_generate(@data)
     File.write(DATA_STORAGE_FILENAME, data_json)
+  end
+
+  def _update_tree_data(parent_id, child_node)
+    parent = _find_by_id(@data[:tree_data], parent_id)
+    child = child_node.content.merge({:id => child_node.name.to_i})
+    if parent
+      if parent[:children]
+        parent[:children].push(child)
+      else
+        parent[:children] = [child]
+      end
+    end
+    pp parent
+  end
+
+  def _find_by_id(current, id)
+    if current[:id] == id
+      return current
+    end
+
+    res = nil
+    if current[:children]
+      current[:children].each do |child|
+        res = res || _find_by_id(child, id)
+      end
+    end
+
+    return res
   end
 
   def _markup_data(item)
@@ -77,6 +104,16 @@ class Store
       end
     end
   end
-end
 
-pp 'ok'
+  def add_child(parent, child_params)
+    child = Tree::TreeNode.new(
+      (@max_id + 1).to_s,
+      child_params.to_h.slice(:title, :description)
+    )
+    
+    parent << child
+    @max_id += 1
+
+    _update_tree_data(parent.name.to_i, child)
+  end
+end

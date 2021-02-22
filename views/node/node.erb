@@ -12,6 +12,7 @@
     <% if @current_node.content[:description] %>
       <p>Описание: <%= @current_node.content[:description] %></p>
     <% end %>
+    <a href="<%= path(new_child_path) %>" class="button">Добавить дочерний узел</a>
   </div>
 
   <div class="cell large-4">
@@ -19,7 +20,7 @@
     <h4>Дочерние узлы</h4>
     <ul>
     <% @current_node.children.each do |child| %>
-      <li><a href="/node/child/<%= child.name %>"><%= child.content[:title] %></a></li>
+      <li><a href="/node/child/<%= child.name %>"><%= "#{child.name} #{child.content[:title]}" %></a></li>
     <% end %>
     </ul>
   <% end %>

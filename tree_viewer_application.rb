@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'roda'
+require 'forme'
 
 require_relative 'models'
 
@@ -34,7 +35,7 @@ class TreeViewerApplication < Roda
     r.hash_branches
 
     r.root do
-      r.redirect node_path
+      r.redirect current_node_path
     end
   end
 end

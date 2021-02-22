@@ -6,6 +6,7 @@ class TreeViewerApplication
   path :empty_tree, '/empty_tree'
   path :not_found, '/not_found'
   path :node_parent, '/node/parent'
+  path :new_child, '/node/new-child'
 
   hash_branch('empty_tree') do |r|
     view('empty_tree')
@@ -24,7 +25,7 @@ class TreeViewerApplication
 
     r.on 'parent' do
       parent = @current_node.parent
-      next r.redirect(path(not_found_path)) if parent.nil?
+      next r.redirect(not_found_path) if parent.nil?
 
       opts[:current_node] = parent
       r.redirect(current_node_path)
@@ -39,6 +40,23 @@ class TreeViewerApplication
       r.redirect(current_node_path)
     end
 
-    r.redirect(not_found_path)
+    r.on 'new-child' do
+      r.get do
+        @parameters = {}
+        view('new_child')
+      end
+
+      r.post do
+        @parameters = DryResultFormeWrapper.new(NodeFormSchema.call(r.params))
+        if @parameters.success?
+          opts[:store].add_child(@current_node, @parameters)
+          r.redirect(current_node_path)
+        else
+          view('new_child')
+        end
+      end
+    end
+
+    r.redirect(path(not_found))
   end
 end
