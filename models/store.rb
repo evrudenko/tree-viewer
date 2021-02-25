@@ -145,4 +145,17 @@ class Store
 
     _update_data(parent.name.to_i, child)
   end
+
+  def remove_node(node)
+    id_for_delete = node.name
+    if @root == node
+      @data[:tree_data] = {}
+      process_empty_tree_case
+    else
+      parent_item = _find_by_id(@data[:tree_data], node.parent.name.to_i)
+      parent_item[:children].reject! { |child_item| child_item[:id] == id_for_delete.to_i }
+
+      node.remove_from_parent!
+    end
+  end
 end

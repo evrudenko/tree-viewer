@@ -16,11 +16,11 @@ class TreeViewerApplication
     set_view_subdir('node')
     set_layout_options(template: '../views/layout')
 
-    next r.redirect(path(empty_tree_path)) if opts[:store].root.nil?
+    r.redirect(path(empty_tree_path)) if opts[:store].root.nil?
 
     r.on Integer do |node_id|
       @current_node = opts[:store].get_node_by_id(node_id)
-      next r.redirect(path(not_found_path)) if @current_node.nil?
+      r.redirect(path(not_found_path)) if @current_node.nil?
 
       r.is do
         view('node')
@@ -35,11 +35,32 @@ class TreeViewerApplication
         r.post do
           @parameters = DryResultFormeWrapper.new(NodeFormSchema.call(r.params))
           if @parameters.success?
-
             opts[:store].add_child(@current_node, @parameters)
             r.redirect("/node/#{@current_node.name}")
           else
             view('new_child')
+          end
+        end
+      end
+
+      r.on 'delete' do
+        r.get do
+          @parameters = {}
+          view('node_delete')
+        end
+
+        r.post do
+          @parameters = DryResultFormeWrapper.new(NodeDeleteSchema.call(r.params))
+          if @parameters.success?
+            parent = @current_node.parent
+            opts[:store].remove_node(@current_node)
+            if parent
+              r.redirect("/node/#{parent.name}")
+            else
+              r.redirect('/')
+            end
+          else
+            view('node_delete')
           end
         end
       end

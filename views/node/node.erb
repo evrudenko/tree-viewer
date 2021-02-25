@@ -13,6 +13,7 @@
       <p>Описание: <%= @current_node.content[:description] %></p>
     <% end %>
     <a href="/node/<%= @current_node.name %>/new-child" class="button">Добавить дочерний узел</a>
+    <a href="/node/<%= @current_node.name %>/delete" class="button">Удалить узел</a>
   </div>
 
   <div class="cell large-4">
