@@ -2,4 +2,4 @@
   <h3>Добавление дочернего узла</h3>
 </div>
 
-<%= render('_child_form', locals: {form_type: 'Добавить', back_location: current_node_path}) %>
+<%= render('_child_form', locals: {form_type: 'Добавить', back_location: "node/#{@current_node.name}"}) %>

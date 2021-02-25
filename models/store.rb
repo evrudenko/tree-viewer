@@ -16,26 +16,35 @@ class Store
 
   def read_data
     raw_data = File.read(DATA_STORAGE_FILENAME)
-    @data = JSON.parse(raw_data, {:symbolize_names => true})
+    @data = JSON.parse(raw_data, { symbolize_names: true })
 
-    if @data[:tree_data].empty?
-      @max_id = @data[:max_id] = -1
-      @data[:valid] = true
-      @root = nil
-      return
-    end
+    _process_data
 
+    _create_tree(nil, @data[:tree_data])
+  end
+
+  def _process_data
+    _process_empty_tree_case
+    _validate_data
+  end
+
+  def _process_empty_tree_case
+    return unless @data[:tree_data].empty?
+
+    @data[:max_id] = -1
+    @data[:valid] = true
+    @root = nil
+  end
+
+  def _validate_data
     if @data[:valid]
       @max_id = @data[:max_id]
-      _create_tree(nil, @data[:tree_data])
     else
       @max_id = -1
       _markup_data(@data[:tree_data])
 
       @data[:valid] = true
       @data[:max_id] = @max_id
-
-      _create_tree(nil, @data[:tree_data])
     end
   end
 
@@ -44,76 +53,96 @@ class Store
     File.write(DATA_STORAGE_FILENAME, data_json)
   end
 
-  def _update_tree_data(parent_id, child_node)
+  def _update_data(parent_id, child_node)
     parent = _find_by_id(@data[:tree_data], parent_id)
-    child = child_node.content.merge({:id => child_node.name.to_i})
+    child_params = child_node.content.merge({ id: child_node.name.to_i })
     if parent
       if parent[:children]
-        parent[:children].push(child)
+        parent[:children].push(child_params)
       else
-        parent[:children] = [child]
+        parent[:children] = [child_params]
       end
     end
-    pp parent
+
+    @data[:max_id] = @max_id
+  end
+
+  def get_node_by_id(node_id)
+    _get_node_by_id(@root, node_id)
+  end
+
+  def _get_node_by_id(current_node, node_id)
+    return current_node if current_node.name.to_i == node_id
+
+    res = nil
+    current_node.children.each do |child|
+      res ||= _get_node_by_id(child, node_id)
+    end
+
+    res
   end
 
   def _find_by_id(current, id)
-    if current[:id] == id
-      return current
-    end
+    return current if current[:id] == id
 
     res = nil
-    if current[:children]
-      current[:children].each do |child|
-        res = res || _find_by_id(child, id)
-      end
+    current[:children]&.each do |child|
+      res ||= _find_by_id(child, id)
     end
 
-    return res
+    res
   end
 
   def _markup_data(item)
     @max_id += 1
     item[:id] = @max_id
 
-    children = item[:children]
-    if children && children.kind_of?(Array)
-      children.each do |child|
-        _markup_data(child)
-      end
+    return unless item[:children].is_a?(Array)
+
+    item[:children].each do |child|
+      _markup_data(child)
     end
   end
 
-  def _create_tree(parent, item)
-    tree_node = Tree::TreeNode.new(
+  def _create_node_from_hash(item)
+    Tree::TreeNode.new(
       item[:id].to_s, # key
       item.slice(:title, :description) # value
     )
+  end
 
-    unless parent
-      # Child getter overloaded, numeric indexes return ordinal child
-      @root = parent = tree_node
-    else
+  def _create_tree(parent, item)
+    return if item.nil?
+
+    tree_node = _create_node_from_hash(item)
+
+    if parent
       parent << tree_node # make tree_node a child of parent
+    else
+      # Child getter overloaded, numeric indexes return ordinal child
+      @root = tree_node
     end
-    
-    children = item[:children]
-    if children && children.kind_of?(Array)
-      children.each do |child|
-        _create_tree(tree_node, child)
-      end
+
+    return unless item[:children].is_a?(Array)
+
+    item[:children].each do |child|
+      _create_tree(tree_node, child)
     end
   end
 
-  def add_child(parent, child_params)
-    child = Tree::TreeNode.new(
-      (@max_id + 1).to_s,
-      child_params.to_h.slice(:title, :description)
+  def _create_node(id, params)
+    Tree::TreeNode.new(
+      id.to_s,
+      params.to_h.slice(:title, :description)
     )
-    
+  end
+
+  def add_child(parent, child_params)
+    child = _create_node(@max_id + 1, child_params)
+
     parent << child
     @max_id += 1
 
-    _update_tree_data(parent.name.to_i, child)
+    _update_data(parent.name.to_i, child)
   end
 end

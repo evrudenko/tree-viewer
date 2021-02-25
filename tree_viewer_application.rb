@@ -35,7 +35,7 @@ class TreeViewerApplication < Roda
     r.hash_branches
 
     r.root do
-      r.redirect current_node_path
+      r.redirect('/node/0')
     end
   end
 end

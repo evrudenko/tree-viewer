@@ -486,10 +486,34 @@
         "title": "Иван Иванов",
         "description": "Человек с планеты Земля",
         "id": 99
+      },
+      {
+        "title": "Артур Артурович",
+        "description": "Окунь",
+        "id": 100,
+        "children": [
+          {
+            "title": "Лаврентий",
+            "description": "Корги, двусторонний пёс",
+            "id": 101,
+            "children": [
+              {
+                "title": "Заяц",
+                "description": "Заяц",
+                "id": 102
+              },
+              {
+                "title": "Заяц 2",
+                "description": "Заяц Розовый",
+                "id": 103
+              }
+            ]
+          }
+        ]
       }
     ],
     "id": 0
   },
   "valid": true,
-  "max_id": 98
+  "max_id": 103
 }

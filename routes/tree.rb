@@ -8,7 +8,7 @@ class TreeViewerApplication
   path :node_parent, '/node/parent'
   path :new_child, '/node/new-child'
 
-  hash_branch('empty_tree') do |r|
+  hash_branch('empty_tree') do |_r|
     view('empty_tree')
   end
 
@@ -16,47 +16,35 @@ class TreeViewerApplication
     set_view_subdir('node')
     set_layout_options(template: '../views/layout')
 
-    @current_node = opts[:current_node]
-    next r.redirect(path(empty_tree_path)) if @current_node.nil?
+    next r.redirect(path(empty_tree_path)) if opts[:store].root.nil?
 
-    r.is do
-      view('node')
-    end
+    r.on Integer do |node_id|
+      @current_node = opts[:store].get_node_by_id(node_id)
+      next r.redirect(path(not_found_path)) if @current_node.nil?
 
-    r.on 'parent' do
-      parent = @current_node.parent
-      next r.redirect(not_found_path) if parent.nil?
-
-      opts[:current_node] = parent
-      r.redirect(current_node_path)
-    end
-
-    r.on 'child', Integer do |node_id|
-      # Child getter overloaded, numeric indexes return ordinal child
-      child = @current_node.children.find {|child| child.name == node_id.to_s}
-      next r.redirect(path(not_found_path)) if child.nil?
-
-      opts[:current_node] = child
-      r.redirect(current_node_path)
-    end
-
-    r.on 'new-child' do
-      r.get do
-        @parameters = {}
-        view('new_child')
+      r.is do
+        view('node')
       end
 
-      r.post do
-        @parameters = DryResultFormeWrapper.new(NodeFormSchema.call(r.params))
-        if @parameters.success?
-          opts[:store].add_child(@current_node, @parameters)
-          r.redirect(current_node_path)
-        else
+      r.on 'new-child' do
+        r.get do
+          @parameters = {}
           view('new_child')
+        end
+
+        r.post do
+          @parameters = DryResultFormeWrapper.new(NodeFormSchema.call(r.params))
+          if @parameters.success?
+
+            opts[:store].add_child(@current_node, @parameters)
+            r.redirect("/node/#{@current_node.name}")
+          else
+            view('new_child')
+          end
         end
       end
     end
 
-    r.redirect(path(not_found))
+    r.redirect(path(not_found_path))
   end
 end
